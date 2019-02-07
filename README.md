@@ -9,8 +9,8 @@ Feel free to use these lines as you wish.
 ## To execute:
 "./cpm k edgelist.txt".
 - k >= 3
-- "edgelist.txt" should contain the graph: one edge on each line separated by a space (no self-loop or multiple edge please).  
-Will print the number of k-cliques and the number of k-clique communities.
+- "edgelist.txt" should contain the graph: one edge on each line separated by a space (no self-loop or multiple edge please).
+- Will print the number of k-cliques and the number of k-clique communities.
 
 ## Contributors:
 
