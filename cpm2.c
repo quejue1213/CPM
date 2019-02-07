@@ -313,7 +313,7 @@ void mkspecial(specialsparse *g, Kvalue k){
 	for (i=1;i<g->n+1;i++) {
 		g->cd[i]=g->cd[i-1]+d[i-1];
 		max=(max>d[i-1])?max:d[i-1];
-		sub[ns++]=i-1;
+		sub[ns++]=g->n-i;//reverse order instead of "i-1"
 		d[i-1]=0;
 		lab[i-1]=k;
 	}
