@@ -589,7 +589,7 @@ void mkcoms(Node* cknode,unionfind *ouf){
 }
 
 //gives a pass on the k-cliques, calling mkcoms each time a clique is found
-void kclique(Kvalue l, specialsparse *g, Node *cknode, Node *cknode2, unionfind *ouf, Clique *n) {
+void kclique(Kvalue l, specialsparse *g, Node *cknode, unionfind *ouf, Clique *n) {
 	Node i,i2,u,v,w;
 	Edge j,end;
 	if(l==2){
@@ -635,7 +635,7 @@ void kclique(Kvalue l, specialsparse *g, Node *cknode, Node *cknode2, unionfind 
 			}
 		}
 
-		kclique(l-1, g, cknode, cknode2, ouf, n);
+		kclique(l-1, g, cknode, ouf, n);
 
 		for (i2=0;i2<g->ns[l-1];i2++){//restoring labels
 			v=g->sub[l-1][i2];
@@ -648,7 +648,7 @@ void kclique(Kvalue l, specialsparse *g, Node *cknode, Node *cknode2, unionfind 
 int main(int argc,char** argv){
 	specialsparse* g;
 	Kvalue k=atoi(argv[1]);
-	Node *cknode=malloc(k*sizeof(unsigned)),*cknode2=malloc(k*sizeof(unsigned));
+	Node *cknode=malloc(k*sizeof(unsigned));
 	Clique i,n;
 	unionfind *ouf;
 
@@ -686,7 +686,7 @@ int main(int argc,char** argv){
 	printf("Iterating over all %u-cliques\n",k);
 
 	n=0;
-	kclique(k, g, cknode, cknode2, ouf, &n);
+	kclique(k, g, cknode, ouf, &n);
 
 	printf("Number of %u-cliques = %llu\n",k,n);
 

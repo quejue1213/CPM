@@ -400,16 +400,12 @@ inline void clearset(Set* s){
 
 typedef struct {
 	char k;//size of the k-cliques to considered
-
-	//to obtain the id of an edge
-	Edge e;
-	Edge *cd;//cumulative degree: (starts with 0) length=n+1
-	Node *adj;//truncated list of neighbors
+	Node n;//Number of nodes
 
 	//putting edges in sets
-	Clique *n1;//n1[i]=number of sets edge i belongs to
-	Clique *n1max;//n1max[i]=maximum number of sets edge i belongs to
-	Clique **s1;//s1[i]=list of sets that the edge i belongs to
+	Clique *n1;//n1[i]=number of sets node i belongs to
+	Clique *n1max;//n1max[i]=maximum number of sets node i belongs to
+	Clique **s1;//s1[i]=list of sets that node i belongs to
 
 	//plain union find datastructure on the sets of edges:
 	Clique n2;//number of sets of sets
@@ -422,14 +418,11 @@ unionfind* allocunionfind(specialsparse *g){
 	unionfind *ouf=malloc(sizeof(unionfind));
 
 	ouf->k=g->k;
-	ouf->e=g->e;
-	ouf->cd=g->cd;
-	ouf->adj=malloc(g->e*sizeof(Node));//g->adj needs to be copied as permuations occur when listing k-cliques
-	memcpy( (void*)ouf->adj, (void*)g->adj, g->e*sizeof(Node) );
+	ouf->n=g->n;
 
-	ouf->n1=calloc(ouf->e,sizeof(Clique));
-	ouf->n1max=calloc(ouf->e,sizeof(Clique));
-	ouf->s1=malloc(ouf->e*sizeof(Clique*));
+	ouf->n1=calloc(ouf->n,sizeof(Clique));
+	ouf->n1max=calloc(ouf->n,sizeof(Clique));
+	ouf->s1=malloc(ouf->n*sizeof(Clique*));
 
 	ouf->n2=0;
 	ouf->n2max=S2MAX;
@@ -437,34 +430,6 @@ unionfind* allocunionfind(specialsparse *g){
 	ouf->r=malloc(ouf->n2max*sizeof(Kvalue));
 
 	return ouf;
-}
-
-inline int cmp2(Node u, Node v){
-	if (u < v){
-		return -1;
-	}
-	if (u > v){
-		return 1;
-	}
-	return 0;
-}
-
-inline Edge edgeid(edge ed,unionfind* ouf){
-	int r;
-	Edge first=ouf->cd[ed.s], last=ouf->cd[ed.s+1]-1, middle=(first+last)/2;
-	while (1) {
-		r=cmp2(ed.t,ouf->adj[middle]);
-		if (r==1){
-			first=middle+1;
-		}
-		else if (r==-1){
-			last=middle-1;
-		}
-		else{
-			return middle;
-		}
-		middle = (first+last)/2;
-	}
 }
 
 Clique Find(Clique x, unionfind *ouf){
@@ -503,19 +468,19 @@ inline Clique MakeSet(unionfind *ouf){
 	return p;	
 }
 
-inline void Add(Edge e,Clique p,unionfind *ouf){
-	if (ouf->n1max[e]==0){
-		ouf->n1max[e]=S1MAX;
-		ouf->s1[e]=malloc(S1MAX*sizeof(Clique));
-		ouf->s1[e][0]=p;
-		ouf->n1[e]++;
+inline void Add(Node u,Clique p,unionfind *ouf){
+	if (ouf->n1max[u]==0){
+		ouf->n1max[u]=S1MAX;
+		ouf->s1[u]=malloc(S1MAX*sizeof(Clique));
+		ouf->s1[u][0]=p;
+		ouf->n1[u]++;
 	}
 	else {
-		if (++(ouf->n1[e])==ouf->n1max[e]){
-			ouf->n1max[e]*=2;
-			ouf->s1[e]=realloc(ouf->s1[e],ouf->n1max[e]*sizeof(Clique));
+		if (++(ouf->n1[u])==ouf->n1max[u]){
+			ouf->n1max[u]*=2;
+			ouf->s1[u]=realloc(ouf->s1[u],ouf->n1max[u]*sizeof(Clique));
 		}
-		ouf->s1[e][ouf->n1[e]-1]=p;
+		ouf->s1[u][ouf->n1[u]-1]=p;
 	}
 }
 
@@ -523,39 +488,29 @@ inline void Add(Edge e,Clique p,unionfind *ouf){
 
 //merging k-clique communities sharing many edges with the k-clique "cknode"
 void mkcoms(Node* cknode,unionfind *ouf){
-	Kvalue a,b,c,k=ouf->k;
-	Edge e;
-	edge ed;
+	Kvalue a,k=ouf->k;
+	Node u;
 	Clique i,p,q;
 
-	static Edge* id=NULL;
 	static Set* set1=NULL;
 	static Set* set2=NULL;
 
-	if (id==NULL){
-		id=malloc(((k*(k-1))/2)*sizeof(Edge));
+	if (set1==NULL){
 		set1=allocset();
 		set2=allocset();
 	}
-	c=0;
+
 	for (a=0;a<k;a++) {
-		for (b=a+1;b<k;b++) {
-			ed.s=cknode[b];
-			ed.t=cknode[a];
-			id[c++]=edgeid(ed,ouf);
-		}
-	}
-	for (a=0;a<c;a++) {
-		e=id[a];
-		for (i=0;i<ouf->n1[e];i++){
-			q=Find(ouf->s1[e][i],ouf);
+		u=cknode[a];
+		for (i=0;i<ouf->n1[u];i++){
+			q=Find(ouf->s1[u][i],ouf);
 			//ouf->s1[e][i]=q;//to be faster next time
 			if (isinset(q,set1)==0){
 				add2set(q,set1);
 				add2set(q,set2);
 			}
 			else{//swapping entry i with last one and delete it
-				ouf->s1[e][i--]=ouf->s1[e][--(ouf->n1[e])];
+				ouf->s1[u][i--]=ouf->s1[u][--(ouf->n1[u])];
 			}
 		}
 		clearset(set1);
@@ -563,7 +518,7 @@ void mkcoms(Node* cknode,unionfind *ouf){
 	p=-1;
 	for (i=0;i<set2->nl;i++){
 		q=set2->list[i];
-		if (set2->tab[q]>=((k-1)*(k-2))/2){
+		if (set2->tab[q]>=k-1){
 			p=Union(p,q,ouf);
 		}
 	}
@@ -571,8 +526,8 @@ void mkcoms(Node* cknode,unionfind *ouf){
 	if (p==-1){
 		p=MakeSet(ouf);
 	}
-	for (a=0;a<c;a++) {
-		Add(id[a],p,ouf);
+	for (a=0;a<k;a++) {
+		Add(cknode[a],p,ouf);
 	}
 }
 
