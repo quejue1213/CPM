@@ -486,7 +486,7 @@ inline void Add(Node u,Clique p,unionfind *ouf){
 
 // THE HEART OF THE CODE: iterating over k-cliques and computing k-clique communities on the fly.
 
-//merging k-clique communities sharing many edges with the k-clique "cknode"
+//merging k-clique communities sharing (k-1) nodes or more with the k-clique "cknode"
 void mkcoms(Node* cknode,unionfind *ouf){
 	Kvalue a,k=ouf->k;
 	Node u;
